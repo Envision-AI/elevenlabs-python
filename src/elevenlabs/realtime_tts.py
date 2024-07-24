@@ -55,7 +55,7 @@ class RealtimeTextToSpeechClient(TextToSpeechClient):
 
         Parameters:
             - voice_id: str. Voice ID to be used, you can use https://api.elevenlabs.io/v1/voices to list all the available voices.
-            
+
             - text: typing.Iterator[str]. The text that will get converted into speech.
 
             - model_id: typing.Optional[str]. Identifier of the model that will be used, you can query them using GET /v1/models. The model needs to have support for text to speech, you can check this using the can_do_text_to_speech property.
@@ -86,31 +86,41 @@ class RealtimeTextToSpeechClient(TextToSpeechClient):
             ),
         )
         """
+        print("Output format")
+        print(output_format)
         with connect(
             urllib.parse.urljoin(
-              "wss://api.elevenlabs.io/", 
-              f"v1/text-to-speech/{jsonable_encoder(voice_id)}/stream-input?model_id={model_id}&output_format={output_format}"
+                "wss://api.elevenlabs.io/",
+                f"v1/text-to-speech/{jsonable_encoder(voice_id)}/stream-input?model_id={model_id}&output_format={output_format}",
             ),
             additional_headers=jsonable_encoder(
                 remove_none_from_dict(
                     {
                         **self._client_wrapper.get_headers(),
-                        **(request_options.get("additional_headers", {}) if request_options is not None else {}),
+                        **(
+                            request_options.get("additional_headers", {})
+                            if request_options is not None
+                            else {}
+                        ),
                     }
                 )
-            )
+            ),
         ) as socket:
             try:
-                socket.send(json.dumps(
-                    dict(
-                        text=" ",
-                        try_trigger_generation=True,
-                        voice_settings=voice_settings.dict() if voice_settings else None,
-                        generation_config=dict(
-                            chunk_length_schedule=[50],
-                        ),
+                socket.send(
+                    json.dumps(
+                        dict(
+                            text=" ",
+                            try_trigger_generation=True,
+                            voice_settings=(
+                                voice_settings.dict() if voice_settings else None
+                            ),
+                            generation_config=dict(
+                                chunk_length_schedule=[50],
+                            ),
+                        )
                     )
-                ))
+                )
             except websockets.exceptions.ConnectionClosedError as ce:
                 raise ApiError(body=ce.reason, status_code=ce.code)
 
