@@ -91,7 +91,7 @@ class RealtimeTextToSpeechClient(TextToSpeechClient):
         with connect(
             urllib.parse.urljoin(
                 "wss://api.elevenlabs.io/",
-                f"v1/text-to-speech/{jsonable_encoder(voice_id)}/stream-input?model_id={model_id}&output_format={output_format}",
+                f"v1/text-to-speech/{jsonable_encoder(voice_id)}/stream-input?model_id={model_id}&output_format=pcm_24000",
             ),
             additional_headers=jsonable_encoder(
                 remove_none_from_dict(
